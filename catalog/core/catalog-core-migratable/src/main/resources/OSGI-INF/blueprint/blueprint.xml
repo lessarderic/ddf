@@ -39,6 +39,6 @@
     </bean>
 
     <service id="catalogMigratableService" ref="catalogMigratable"
-             interface="org.codice.ddf.migration.Migratable"/>
+             interface="org.codice.ddf.migration.DataMigratable"/>
 
 </blueprint>

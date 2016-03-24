@@ -23,5 +23,5 @@
     </bean>
 
     <service id="securityMigratableService" ref="securityMigratable"
-             interface="org.codice.ddf.migration.Migratable"/>
+             interface="org.codice.ddf.migration.ConfigurationMigratable"/>
 </blueprint>
