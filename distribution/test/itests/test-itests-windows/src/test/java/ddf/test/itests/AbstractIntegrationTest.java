@@ -459,7 +459,7 @@ public abstract class AbstractIntegrationTest {
                         RMI_REG_PORT.getPort()),
                 editConfigurationFilePut("etc/org.apache.karaf.management.cfg",
                         "rmiServerPort",
-                        RMI_SERVER_PORT.getPort()),
+                        RMI_SERVER_PORT.getPort()) /*,
                 installStartupFile(getClass().getResourceAsStream("/hazelcast.xml"),
                         "/etc/hazelcast.xml"),
                 installStartupFile(getClass().getResourceAsStream(
@@ -471,7 +471,7 @@ public abstract class AbstractIntegrationTest {
                                 + "/services/SecurityTokenService?wsdl" + "\""),
                 installStartupFile(getClass().getResourceAsStream(
                         "/ddf.catalog.solr.external.SolrHttpCatalogProvider.config"),
-                        "/etc/ddf.catalog.solr.external.SolrHttpCatalogProvider.config"));
+                        "/etc/ddf.catalog.solr.external.SolrHttpCatalogProvider.config") */);
     }
 
     protected Option[] configureMavenRepos() {
