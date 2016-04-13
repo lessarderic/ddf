@@ -120,7 +120,7 @@ public class AdminConfig {
         Configuration logConfig = configAdmin.getConfiguration(LOG_CONFIG_PID, null);
         Dictionary<String, Object> properties = logConfig.getProperties();
 
-        properties.put(LOGGER_PREFIX + "*", DEFAULT_LOG_LEVEL);
+        properties.put(LOGGER_PREFIX + "*", "TRACE");
 
         if (!StringUtils.isEmpty(logLevel)) {
             properties.put(LOGGER_PREFIX + "ddf", logLevel);

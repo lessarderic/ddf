@@ -315,7 +315,7 @@ public abstract class AbstractIntegrationTest {
                 configureMavenRepos(),
                 configureSystemSettings(),
                 configureVmOptions(),
-                configureStartScript(),
+//                configureStartScript(),
                 configurePaxExam());
     }
 
