@@ -27,7 +27,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>test-itests-common</module>
-        <module>test-itests-ddf</module>
+        <module>test-itests-windows</module>
     </modules>
     <properties>
         <pax.exam.version>4.8.0</pax.exam.version>
