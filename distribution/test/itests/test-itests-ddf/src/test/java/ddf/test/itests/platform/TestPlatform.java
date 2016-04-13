@@ -30,21 +30,21 @@ import ddf.test.itests.AbstractIntegrationTest;
 @ExamReactorStrategy(PerClass.class)
 public class TestPlatform extends AbstractIntegrationTest {
 
-    private static final DynamicUrl BANANA_URL = new DynamicUrl(DynamicUrl.SECURE_ROOT,
-            HTTPS_PORT,
-            "/solr/banana");
-
-    private static final DynamicUrl LOGGING_SERVICE_JOLOKIA_URL =
-            new DynamicUrl(DynamicUrl.SECURE_ROOT,
-                    HTTPS_PORT,
-                    "/jolokia/exec/org.codice.ddf.platform.logging.LoggingService:service=logging-service/retrieveLogEvents");
+//    private static final DynamicUrl BANANA_URL = new DynamicUrl(DynamicUrl.SECURE_ROOT,
+//            HTTPS_PORT,
+//            "/solr/banana");
+//
+//    private static final DynamicUrl LOGGING_SERVICE_JOLOKIA_URL =
+//            new DynamicUrl(DynamicUrl.SECURE_ROOT,
+//                    HTTPS_PORT,
+//                    "/jolokia/exec/org.codice.ddf.platform.logging.LoggingService:service=logging-service/retrieveLogEvents");
 
     @BeforeExam
     public void beforeTest() throws Exception {
         try {
             basePort = getBasePort();
             getAdminConfig().setLogLevels();
-            getServiceManager().waitForRequiredApps(new String[] {"platform-app"});
+            getServiceManager().waitForRequiredApps(new String[] {"platform-app", "security-services-app"});
             getServiceManager().waitForAllBundles();
             // Start the services needed for testing.
             // We need to start the Search UI to test that it redirects properly

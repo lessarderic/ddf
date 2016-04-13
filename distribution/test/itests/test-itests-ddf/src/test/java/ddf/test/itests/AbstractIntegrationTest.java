@@ -386,7 +386,7 @@ public abstract class AbstractIntegrationTest {
         return options(logLevel(LogLevelOption.LogLevel.WARN),
                 useOwnExamBundlesStartLevel(100),
                 // increase timeout for CI environment
-                systemTimeout(TimeUnit.MINUTES.toMillis(10)), when(Boolean.getBoolean(
+                systemTimeout(TimeUnit.MINUTES.toMillis(20)), when(Boolean.getBoolean(
                         "keepRuntimeFolder")).useOptions(keepRuntimeFolder()), cleanCaches(true));
     }
 
