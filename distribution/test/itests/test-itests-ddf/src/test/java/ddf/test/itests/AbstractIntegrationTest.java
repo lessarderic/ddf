@@ -373,13 +373,16 @@ public abstract class AbstractIntegrationTest {
     }
 
     protected Option[] configureDistribution() {
+        String unpackDirectory = System.getProperty("karaf.unpack.directory");
+        unpackDirectory = (unpackDirectory == null) ? "target/exam" : unpackDirectory;
+        LOGGER.error("### unpackDirectory: {}", unpackDirectory);
+
         return options(karafDistributionConfiguration(maven().groupId("org.codice.ddf")
                 .artifactId("ddf")
                 .type("zip")
                 .versionAsInProject()
-                .getURL(), "ddf", KARAF_VERSION).unpackDirectory(new File("target/exam"))
+                .getURL(), "ddf", KARAF_VERSION).unpackDirectory(new File(unpackDirectory))
                 .useDeployFolder(false));
-
     }
 
     protected Option[] configurePaxExam() {
