@@ -13,6 +13,7 @@
  */
 package ddf.test.itests.catalog;
 
+import static java.lang.Thread.sleep;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;
@@ -28,10 +29,17 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.path.json.JsonPath.with;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
+import static com.xebialabs.restito.semantics.Action.bytesContent;
+import static com.xebialabs.restito.semantics.Action.contentType;
+import static com.xebialabs.restito.semantics.Action.custom;
+import static com.xebialabs.restito.semantics.Action.header;
+import static com.xebialabs.restito.semantics.Action.ok;
 import static com.xebialabs.restito.semantics.Action.success;
+import static ddf.test.itests.AbstractIntegrationTest.DynamicUrl.INSECURE_ROOT;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,10 +49,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.bundle.core.BundleService;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswConstants;
+import org.glassfish.grizzly.http.server.Request;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
@@ -65,6 +77,7 @@ import org.slf4j.ext.XLogger;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.internal.http.Method;
 import com.jayway.restassured.path.xml.XmlPath;
+import com.xebialabs.restito.semantics.Action;
 import com.xebialabs.restito.semantics.Call;
 import com.xebialabs.restito.semantics.Condition;
 import com.xebialabs.restito.server.StubServer;
@@ -109,6 +122,8 @@ public class TestFederation extends AbstractIntegrationTest {
 
     private static final String CONNECTED_SOURCE_ID = "cswConnectedSource";
 
+    private static final String OPENSEARCH_STUB_SOURCE_ID = "openSearchStubSource";
+
     private static final String CSW_SOURCE_WITH_METACARD_XML_ID = "cswSource2";
 
     private static final String GMD_SOURCE_ID = "gmdSource";
@@ -118,6 +133,12 @@ public class TestFederation extends AbstractIntegrationTest {
     private static final String DEFAULT_SAMPLE_PRODUCT_FILE_NAME = "sample.txt";
 
     private static final DynamicPort RESTITO_STUB_SERVER_PORT = new DynamicPort(6);
+
+    private static final DynamicPort OPENSEARCH_STUB_SERVER_PORT = new DynamicPort(7);
+
+    public static final DynamicUrl OPENSEARCH_STUB_SERVER_PATH = new DynamicUrl(INSECURE_ROOT,
+            OPENSEARCH_STUB_SERVER_PORT,
+            "/services/catalog/query");
 
     private static String[] metacardIds = new String[2];
 
@@ -132,6 +153,8 @@ public class TestFederation extends AbstractIntegrationTest {
             SUBSCRIBER);
 
     private static StubServer server;
+
+    private static StubServer openSearchStub;
 
     @Rule
     public TestName testName = new TestName();
@@ -151,6 +174,31 @@ public class TestFederation extends AbstractIntegrationTest {
             getServiceManager().createManagedService(OpenSearchSourceProperties.FACTORY_PID,
                     openSearchProperties);
 
+            openSearchStub =
+                    new StubServer(Integer.parseInt(OPENSEARCH_STUB_SERVER_PORT.getPort())).run();
+
+            whenHttp(openSearchStub).match(Condition.custom(call -> {
+                Request request = call.getRequest();
+                LOGGER.error("##### Request URL: {}", request.getRequestURL());
+                LOGGER.error("##### Query String: {}", request.getQueryString());
+                request.getParameterNames()
+                        .stream()
+                        .forEach((name) -> LOGGER.error("##### Parameter {}: {}",
+                                name,
+                                request.getParameter(name)));
+                return !request.getRequestURL()
+                        .toString()
+                        .endsWith("services/catalog/metacardId");
+            }))
+                    .then(Action.ok());
+
+            OpenSearchSourceProperties openSearchStubProperties = new OpenSearchSourceProperties(
+                    OPENSEARCH_STUB_SOURCE_ID);
+            openSearchStubProperties.put("endpointUrl", OPENSEARCH_STUB_SERVER_PATH.getUrl());
+
+            getServiceManager().createManagedService(OpenSearchSourceProperties.FACTORY_PID,
+                    openSearchStubProperties);
+
             getServiceManager().waitForHttpEndpoint(CSW_PATH + "?_wadl");
             get(CSW_PATH + "?_wadl").prettyPrint();
             CswSourceProperties cswProperties = new CswSourceProperties(CSW_SOURCE_ID);
@@ -169,6 +217,7 @@ public class TestFederation extends AbstractIntegrationTest {
                     gmdProperties);
 
             getCatalogBundle().waitForFederatedSource(OPENSEARCH_SOURCE_ID);
+            getCatalogBundle().waitForFederatedSource(OPENSEARCH_STUB_SOURCE_ID);
             getCatalogBundle().waitForFederatedSource(CSW_SOURCE_ID);
             getCatalogBundle().waitForFederatedSource(CSW_SOURCE_WITH_METACARD_XML_ID);
             getCatalogBundle().waitForFederatedSource(GMD_SOURCE_ID);
@@ -427,6 +476,75 @@ public class TestFederation extends AbstractIntegrationTest {
                 .body(is(partialSampleData));
         // @formatter:on
     }
+
+    @Test
+    public void testSlowResponse() throws Exception {
+        StubServer server = new StubServer().run();
+        server.start();
+
+        whenHttp(server).match(Condition.get("/test/slowresponse"))
+                .then(ok(),
+                        contentType("text/plain"),
+                        header("Transfer-Encoding", "chunked"),
+                        custom(response -> {
+                            "message".chars()
+                                    .forEach((c) -> {
+                                        try {
+                                            response.getNIOWriter()
+                                                    .write(c);
+                                            response.flush();
+                                            sleep(2000);
+                                        } catch (IOException | InterruptedException e) {
+                                            LOGGER.error("Error", e);
+                                        }
+                                    });
+                            return response;
+                        }));
+
+        LOGGER.error("##### http://localhost:{}/test/slowresponse", server.getPort());
+
+        HttpClient client = new HttpClient();
+        GetMethod get = new GetMethod(
+                "http://localhost:" + server.getPort() + "/test/slowresponse");
+        client.executeMethod(get);
+        InputStream inputStream = get.getResponseBodyAsStream();
+
+        int character;
+
+        while ((character = inputStream.read()) != -1) {
+            LOGGER.error("##### Character read: {}", character);
+        }
+
+        get.releaseConnection();
+    }
+
+    @Test
+    public void testDownloadFromProductCache() throws IOException {
+
+        InputStream inputStream = getClass().getResourceAsStream(
+                "/open-search-stub-query-response.xml");
+        String metacard = IOUtils.toString(inputStream)
+                .replace("{{port}}", Integer.toString(openSearchStub.getPort()));
+        whenHttp(openSearchStub).match(Condition.get("/services/catalog/metacardId"))
+                .then(ok(),
+                        contentType("text/xml"),
+                        header("Transfer-Encoding", "chunked"),
+                        bytesContent(metacard.getBytes()));
+        inputStream.close();
+
+        String restUrl = REST_PATH.getUrl() + "sources/" + OPENSEARCH_STUB_SOURCE_ID + "/metacardId"
+                + "?transform=resource";
+        // Perform Test and Verify
+        // @formatter:off
+        when().get(restUrl).then().log().all().assertThat().body(is(metacard));
+        // @formatter:on
+    }
+    // TODO
+    // - Download from cache, returned properly and CometD events published
+    // - Retry download error fails and CometD events published
+    // - Retry download error succeeds and CometD retry events published
+    // - Retry slow download and CometD retry events published
+    // - Download from federated source when metacard changed, returned properly and CometD events published
 
     /**
      * Tests Source CANNOT retrieve existing product. The product is NOT located in one of the
@@ -852,11 +970,11 @@ public class TestFederation extends AbstractIntegrationTest {
         Bundle bundle = bundleService.getBundle("spatial-csw-endpoint");
         bundle.stop();
         while (bundle.getState() != Bundle.RESOLVED) {
-            Thread.sleep(1000);
+            sleep(1000);
         }
         bundle.start();
         while (bundle.getState() != Bundle.ACTIVE) {
-            Thread.sleep(1000);
+            sleep(1000);
         }
         getServiceManager().waitForHttpEndpoint(CSW_SUBSCRIPTION_PATH + "?_wadl");
         //get subscription
@@ -964,7 +1082,7 @@ public class TestFederation extends AbstractIntegrationTest {
             Set<String> foundIds = null;
 
             try {
-                Thread.sleep(EVENT_UPDATE_WAIT_INTERVAL);
+                sleep(EVENT_UPDATE_WAIT_INTERVAL);
                 millis += EVENT_UPDATE_WAIT_INTERVAL;
             } catch (InterruptedException e) {
                 LOGGER.info("Interrupted exception while trying to sleep for events", e);
@@ -1050,8 +1168,7 @@ public class TestFederation extends AbstractIntegrationTest {
 
     @Override
     protected Option[] configureCustom() {
-
-        return options(mavenBundle("ddf.test.thirdparty", "restito").versionAsInProject());
+        return options(mavenBundle("ddf.test.thirdparty", "restito").versionAsInProject(),
+                mavenBundle("org.codice.thirdparty", "commons-httpclient").versionAsInProject());
     }
-
 }
