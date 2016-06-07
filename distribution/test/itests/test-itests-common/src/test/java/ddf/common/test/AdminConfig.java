@@ -125,6 +125,8 @@ public class AdminConfig {
         if (!StringUtils.isEmpty(logLevel)) {
             properties.put(LOGGER_PREFIX + "ddf", logLevel);
             properties.put(LOGGER_PREFIX + "org.codice", logLevel);
+            // TODO: remove this cxf loglevel
+            properties.put(LOGGER_PREFIX + "org.apache.cxf", "INFO");
         }
 
         logConfig.update(properties);
