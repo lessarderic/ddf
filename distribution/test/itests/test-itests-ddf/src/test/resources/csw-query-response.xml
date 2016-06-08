@@ -5,9 +5,9 @@
         <csw:Record>
             <dc:identifier>4cdb5d6bc8c1428f874f28a944d18b84</dc:identifier>
             <dct:bibliographicCitation>4cdb5d6bc8c1428f874f28a944d18b84</dct:bibliographicCitation>
-            <dc:title>Michael.jpg</dc:title>
-            <dct:alternative>Michael.jpg</dct:alternative>
-            <dc:type>image/jpeg</dc:type>
+            <dc:title>Michael.txt</dc:title>
+            <dct:alternative>Michael.txt</dct:alternative>
+            <dc:type>text/plain; charset=ISO-8859-1</dc:type>
             <dc:relation>http://localhost:20007/services/catalog/sources/cswStubServer/4cdb5d6bc8c1428f874f28a944d18b84?transform=resource</dc:relation>
             <dc:date>2016-06-07T09:49:06.005-07:00</dc:date>
             <dct:modified>2016-06-07T09:49:06.005-07:00</dct:modified>
