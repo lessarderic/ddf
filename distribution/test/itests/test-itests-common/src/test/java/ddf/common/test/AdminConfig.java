@@ -31,7 +31,7 @@ public class AdminConfig {
 
     public static final String LOGGER_PREFIX = "log4j.logger.";
 
-    public static final String DEFAULT_LOG_LEVEL = "WARN";
+    public static final String DEFAULT_LOG_LEVEL = "INFO";
 
     public static final String TEST_LOGLEVEL_PROPERTY = "itestLogLevel";
 
@@ -121,12 +121,11 @@ public class AdminConfig {
         Dictionary<String, Object> properties = logConfig.getProperties();
 
         properties.put(LOGGER_PREFIX + "*", DEFAULT_LOG_LEVEL);
+        properties.put(LOGGER_PREFIX + "org.apache.cxf", "DEBUG");
 
         if (!StringUtils.isEmpty(logLevel)) {
             properties.put(LOGGER_PREFIX + "ddf", logLevel);
             properties.put(LOGGER_PREFIX + "org.codice", logLevel);
-            // TODO: remove this cxf loglevel
-            properties.put(LOGGER_PREFIX + "org.apache.cxf", "INFO");
         }
 
         logConfig.update(properties);

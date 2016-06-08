@@ -8,7 +8,7 @@
             <dc:title>Michael.jpg</dc:title>
             <dct:alternative>Michael.jpg</dct:alternative>
             <dc:type>image/jpeg</dc:type>
-            <dc:relation>https://localhost:8993/services/catalog/sources/ddf.distribution/4cdb5d6bc8c1428f874f28a944d18b84?transform=resource</dc:relation>
+            <dc:relation>http://localhost:20007/services/catalog/sources/cswStubServer/4cdb5d6bc8c1428f874f28a944d18b84?transform=resource</dc:relation>
             <dc:date>2016-06-07T09:49:06.005-07:00</dc:date>
             <dct:modified>2016-06-07T09:49:06.005-07:00</dct:modified>
             <dct:created>2016-06-07T09:49:06.005-07:00</dct:created>
@@ -20,7 +20,7 @@
             <dc:publisher/>
             <dc:contributor/>
             <dc:source>content:4cdb5d6bc8c1428f874f28a944d18b84</dc:source>
-            <dc:publisher>ddf.distribution</dc:publisher>
+            <dc:publisher>cswStubServer</dc:publisher>
         </csw:Record>
     </csw:SearchResults>
 </csw:GetRecordsResponse>

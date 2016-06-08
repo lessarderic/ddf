@@ -169,8 +169,12 @@ public class TestFederation extends AbstractIntegrationTest {
             getCatalogBundle().waitForCatalogProvider();
             getServiceManager().waitForHttpEndpoint(SERVICE_ROOT + "/catalog/query?_wadl");
 
-            cswStub =
-                    new StubServer(Integer.parseInt(CSW_STUB_SERVER_PORT.getPort())).run();
+            OpenSearchSourceProperties openSearchProperties = new OpenSearchSourceProperties(
+                    OPENSEARCH_SOURCE_ID);
+            getServiceManager().createManagedService(OpenSearchSourceProperties.FACTORY_PID,
+                    openSearchProperties);
+
+            cswStub = new StubServer(Integer.parseInt(CSW_STUB_SERVER_PORT.getPort())).run();
 
             whenHttp(cswStub).match(Condition.custom(call -> {
                 Request request = call.getRequest();
@@ -187,44 +191,44 @@ public class TestFederation extends AbstractIntegrationTest {
 
             setupCswStubServer();
 
-            CswSourceProperties cswStubServerProperties = new CswSourceProperties(CSW_STUB_SOURCE_ID);
+            CswSourceProperties cswStubServerProperties =
+                    new CswSourceProperties(CSW_STUB_SOURCE_ID);
             cswStubServerProperties.put("cswUrl", CSW_STUB_SERVER_PATH.getUrl());
             cswStubServerProperties.put("pollInterval", 1);
             getServiceManager().createManagedService(CswSourceProperties.FACTORY_PID,
                     cswStubServerProperties);
 
-//            getServiceManager().waitForHttpEndpoint(CSW_PATH + "?_wadl");
-//            get(CSW_PATH + "?_wadl").prettyPrint();
-//            CswSourceProperties cswProperties = new CswSourceProperties(CSW_SOURCE_ID);
-//
-//            getServiceManager().createManagedService(CswSourceProperties.FACTORY_PID,
-//                    cswProperties);
-//
-//            CswSourceProperties cswProperties2 = new CswSourceProperties(
-//                    CSW_SOURCE_WITH_METACARD_XML_ID);
-//            cswProperties2.put("outputSchema", "urn:catalog:metacard");
-//            getServiceManager().createManagedService(CswSourceProperties.FACTORY_PID,
-//                    cswProperties2);
-//
-//            CswSourceProperties gmdProperties = new CswSourceProperties(GMD_SOURCE_ID,
-//                    CswSourceProperties.GMD_FACTORY_PID);
-//            getServiceManager().createManagedService(CswSourceProperties.GMD_FACTORY_PID,
-//                    gmdProperties);
+            getServiceManager().waitForHttpEndpoint(CSW_PATH + "?_wadl");
+            get(CSW_PATH + "?_wadl").prettyPrint();
+            CswSourceProperties cswProperties = new CswSourceProperties(CSW_SOURCE_ID);
 
-            //getCatalogBundle().waitForFederatedSource(OPENSEARCH_SOURCE_ID);
+            getServiceManager().createManagedService(CswSourceProperties.FACTORY_PID,
+                    cswProperties);
+
+            CswSourceProperties cswProperties2 = new CswSourceProperties(
+                    CSW_SOURCE_WITH_METACARD_XML_ID);
+            cswProperties2.put("outputSchema", "urn:catalog:metacard");
+            getServiceManager().createManagedService(CswSourceProperties.FACTORY_PID,
+                    cswProperties2);
+
+            CswSourceProperties gmdProperties = new CswSourceProperties(GMD_SOURCE_ID,
+                    CswSourceProperties.GMD_FACTORY_PID);
+            getServiceManager().createManagedService(CswSourceProperties.GMD_FACTORY_PID,
+                    gmdProperties);
+
             LOGGER.error("#### Starting wait for CSW stub server");
+            getCatalogBundle().waitForFederatedSource(OPENSEARCH_SOURCE_ID);
             getCatalogBundle().waitForFederatedSource(CSW_STUB_SOURCE_ID);
+            getCatalogBundle().waitForFederatedSource(CSW_SOURCE_ID);
+            getCatalogBundle().waitForFederatedSource(CSW_SOURCE_WITH_METACARD_XML_ID);
+            getCatalogBundle().waitForFederatedSource(GMD_SOURCE_ID);
             LOGGER.error("#### Ending wait for CSW stub server");
-            //getCatalogBundle().waitForFederatedSource(CSW_SOURCE_ID);
-            //getCatalogBundle().waitForFederatedSource(CSW_SOURCE_WITH_METACARD_XML_ID);
-            //getCatalogBundle().waitForFederatedSource(GMD_SOURCE_ID);
 
-            getServiceManager().waitForSourcesToBeAvailable(//REST_PATH.getUrl(),
-                    CSW_STUB_SOURCE_ID
-                    //CSW_SOURCE_ID,
-                    //CSW_SOURCE_WITH_METACARD_XML_ID,
-                    //GMD_SOURCE_ID
-                     );
+            getServiceManager().waitForSourcesToBeAvailable(REST_PATH.getUrl(),
+                    CSW_STUB_SOURCE_ID,
+                    CSW_SOURCE_ID,
+                    CSW_SOURCE_WITH_METACARD_XML_ID,
+                    GMD_SOURCE_ID);
 
             metacardIds[GEOJSON_RECORD_INDEX] = TestCatalog.ingest(Library.getSimpleGeoJson(),
                     "application/json");
@@ -519,19 +523,19 @@ public class TestFederation extends AbstractIntegrationTest {
     @Test
     public void testDownloadFromProductCache() throws IOException {
 
-        InputStream inputStream = getClass().getResourceAsStream(
-                "/open-search-stub-query-response.xml");
-        String metacard = IOUtils.toString(inputStream)
-                .replace("{{port}}", Integer.toString(cswStub.getPort()));
-        whenHttp(cswStub).match(Condition.get("/services/catalog/metacardId"))
-                .then(ok(),
-                        contentType("text/xml"),
-                        header("Transfer-Encoding", "chunked"),
-                        bytesContent(metacard.getBytes()));
-        inputStream.close();
+        //        InputStream inputStream = getClass().getResourceAsStream(
+        //                "/open-search-stub-query-response.xml");
+        //        String metacard = IOUtils.toString(inputStream)
+        //                .replace("{{port}}", Integer.toString(cswStub.getPort()));
+        //        whenHttp(cswStub).match(Condition.get("/services/catalog/metacardId"))
+        //                .then(ok(),
+        //                        contentType("text/xml"),
+        //                        header("Transfer-Encoding", "chunked"),
+        //                        bytesContent(metacard.getBytes()));
+        //        inputStream.close();
 
-        String restUrl = REST_PATH.getUrl() + "sources/" + CSW_STUB_SOURCE_ID + "/metacardId"
-                + "?transform=resource";
+        String restUrl = REST_PATH.getUrl() + "sources/" + CSW_STUB_SOURCE_ID + "/"
+                + metacardIds[XML_RECORD_INDEX] + "?transform=resource";
         // Perform Test and Verify
         // @formatter:off
         when().get(restUrl).then().log().all().assertThat().contentType("text/xml");
@@ -1076,9 +1080,9 @@ public class TestFederation extends AbstractIntegrationTest {
                         bytesContent(IOUtils.toByteArray(inputStream)));
         inputStream.close();
 
-        inputStream = getClass().getResourceAsStream(
-                "/csw-query-response.xml");
-        whenHttp(cswStub).match(Condition.post("/services/csw"), Condition.withPostBodyContaining("GetRecords"))
+        inputStream = getClass().getResourceAsStream("/csw-query-response.xml");
+        whenHttp(cswStub).match(Condition.post("/services/csw"),
+                Condition.withPostBodyContaining("GetRecords"))
                 .then(ok(),
                         contentType("text/xml"),
                         bytesContent(IOUtils.toByteArray(inputStream)));
