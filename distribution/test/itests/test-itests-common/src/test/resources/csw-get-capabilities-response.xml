@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<csw:Capabilities ns10:schemaLocation="http://www.opengis.net/csw /ogc/csw/2.0.2/CSW-publication.xsd" version="2.0.2" xmlns:csw="http://www.opengis.net/cat/csw/2.0.2" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dct="http://purl.org/dc/terms/" xmlns:gml="http://www.opengis.net/gml" xmlns:ns10="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns2="http://www.w3.org/1999/xlink" xmlns:ns6="http://www.w3.org/2001/SMIL20/" xmlns:ns9="http://www.w3.org/2001/SMIL20/Language" xmlns:ogc="http://www.opengis.net/ogc" xmlns:ows="http://www.opengis.net/ows">
+<!--
+/**
+ * Copyright (c) Codice Foundation
+ *
+ * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public License is distributed along with this program and can be found at
+ * <http://www.gnu.org/licenses/lgpl.html>.
+ *
+ **/
+-->
+<csw:Capabilities ns10:schemaLocation="" version="2.0.2"
+                  xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
+                  xmlns:gml="http://www.opengis.net/gml"
+                  xmlns:ns10="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:ns2="http://www.w3.org/1999/xlink"
+                  xmlns:ogc="http://www.opengis.net/ogc" xmlns:ows="http://www.opengis.net/ows">
     <ows:ServiceIdentification>
         <ows:Title>Catalog Service for the Web</ows:Title>
         <ows:Abstract>DDF CSW Endpoint</ows:Abstract>
@@ -15,8 +33,8 @@
         <ows:Operation name="GetCapabilities">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get ns2:href="https://localhost:8993/services/csw"/>
-                    <ows:Post ns2:href="https://localhost:8993/services/csw">
+                    <ows:Get ns2:href="{{httpRoot}}:{{port}}/services/csw"/>
+                    <ows:Post ns2:href="{{httpRoot}}:{{port}}/services/csw">
                         <ows:Constraint name="PostEncoding">
                             <ows:Value>XML</ows:Value>
                         </ows:Constraint>
@@ -33,8 +51,8 @@
         <ows:Operation name="DescribeRecord">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get ns2:href="https://localhost:8993/services/csw"/>
-                    <ows:Post ns2:href="https://localhost:8993/services/csw">
+                    <ows:Get ns2:href="{{httpRoot}}:{{port}}/services/csw"/>
+                    <ows:Post ns2:href="{{httpRoot}}:{{port}}/services/csw">
                         <ows:Constraint name="PostEncoding">
                             <ows:Value>XML</ows:Value>
                         </ows:Constraint>
@@ -63,8 +81,8 @@
         <ows:Operation name="GetRecords">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get ns2:href="https://localhost:8993/services/csw"/>
-                    <ows:Post ns2:href="https://localhost:8993/services/csw">
+                    <ows:Get ns2:href="{{httpRoot}}:{{port}}/services/csw"/>
+                    <ows:Post ns2:href="{{httpRoot}}:{{port}}/services/csw">
                         <ows:Constraint name="PostEncoding">
                             <ows:Value>XML</ows:Value>
                         </ows:Constraint>
@@ -102,8 +120,8 @@
         <ows:Operation name="GetRecordById">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get ns2:href="https://localhost:8993/services/csw"/>
-                    <ows:Post ns2:href="https://localhost:8993/services/csw">
+                    <ows:Get ns2:href="{{httpRoot}}:{{port}}/services/csw"/>
+                    <ows:Post ns2:href="{{httpRoot}}:{{port}}/services/csw">
                         <ows:Constraint name="PostEncoding">
                             <ows:Value>XML</ows:Value>
                         </ows:Constraint>
@@ -115,7 +133,7 @@
                 <ows:Value>http://www.isotc211.org/2005/gmd</ows:Value>
                 <ows:Value>http://www.opengis.net/cat/csw/2.0.2</ows:Value>
                 <ows:Value>http://www.iana.org/assignments/media-types/application/octet-stream</ows:Value>
-            </ows:Parameter>
+            </ows:Parameter>`
             <ows:Parameter name="OutputFormat">
                 <ows:Value>application/xml</ows:Value>
                 <ows:Value>application/json</ows:Value>
@@ -138,7 +156,7 @@
         <ows:Operation name="Transaction">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Post ns2:href="https://localhost:8993/services/csw">
+                    <ows:Post ns2:href="{{httpRoot}}:{{port}}/services/csw">
                         <ows:Constraint name="PostEncoding">
                             <ows:Value>XML</ows:Value>
                         </ows:Constraint>

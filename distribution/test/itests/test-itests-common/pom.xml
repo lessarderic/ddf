@@ -103,6 +103,11 @@
             <artifactId>platform-util</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.xebialabs.restito</groupId>
+            <artifactId>restito</artifactId>
+            <version>0.7</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
