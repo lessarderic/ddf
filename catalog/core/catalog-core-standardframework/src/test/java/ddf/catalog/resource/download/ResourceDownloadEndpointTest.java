@@ -15,7 +15,6 @@ package ddf.catalog.resource.download;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -23,9 +22,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.boon.json.JsonFactory;
+import org.boon.json.ObjectMapper;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -44,7 +45,7 @@ public class ResourceDownloadEndpointTest {
 
     private static final String SOURCE_ID = "ddf.distribution";
 
-    private static final String SUCCESSFUL_DOWNLOAD_TO_CACHE_MSG_TEMPLATE = "The product associated with metacard [%s] from source [%s] is being downloaded to the product cache.";
+    private static final String DOWNLOAD_ID = "download ID";
 
     @Mock
     private CatalogFramework mockCatalogFramework;
@@ -55,83 +56,144 @@ public class ResourceDownloadEndpointTest {
     @Mock
     private ResourceResponse mockResourceResponse;
 
-    @Test(expected = DownloadToCacheOnlyException.class)
-    public void testStartDownloadToCacheOnlyCacheDisabled() throws Exception {
-        // Setup
-        setupMockDownloadManager(false);
-        ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+    private ObjectMapper objectMapper = JsonFactory.create();
 
-        // Perform Test
-        resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID, METACARD_ID);
+    @Before
+    public void setup() {
+        when(mockResourceResponse.getPropertyValue("downloadIdentifier")).thenReturn(DOWNLOAD_ID);
     }
 
     @Test(expected = DownloadToCacheOnlyException.class)
-    public void testStartDownloadToCacheOnlyNullResourceResponse() throws Exception {
+    public void downloadToCacheOnlyUsingGetWhenCacheDisabled() throws Exception {
+        // Setup
+        setupMockDownloadManager(false);
+        ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
+
+        // Perform Test
+        resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID, METACARD_ID);
+    }
+
+    @Test(expected = DownloadToCacheOnlyException.class)
+    public void downloadToCacheOnlyUsingGetWhenNullResourceResponse() throws Exception {
         // Setup
         setupMockDownloadManager(true);
         setupMockCatalogFramework(null, null);
         ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
 
         // Perform Test
-        resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID, METACARD_ID);
+        resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID, METACARD_ID);
     }
 
     @Test(expected = DownloadToCacheOnlyException.class)
-    public void testStartDownloadToCacheOnlyCatalogFrameworkThrowsIOException() throws Exception {
+    public void downloadToCacheOnlyUsingGetWhenCatalogFrameworkThrowsIOException()
+            throws Exception {
         // Setup
         setupMockDownloadManager(true);
         setupMockCatalogFramework(mockResourceResponse, IOException.class);
         ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
 
         // Perform Test
-        resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID, METACARD_ID);
+        resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID, METACARD_ID);
     }
 
     @Test(expected = DownloadToCacheOnlyException.class)
-    public void testStartDownloadToCacheOnlyCatalogFrameworkThrowsResourceNotSupportedException()
-        throws Exception {
+    public void downloadToCacheOnlyUsingGetWhenCatalogFrameworkThrowsResourceNotSupportedException()
+            throws Exception {
         // Setup
         setupMockDownloadManager(true);
         setupMockCatalogFramework(mockResourceResponse, ResourceNotSupportedException.class);
         ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
 
         // Perform Test
-        resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID, METACARD_ID);
+        resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID, METACARD_ID);
     }
 
     @Test(expected = DownloadToCacheOnlyException.class)
-    public void testStartDownloadToCacheOnlyCatalogFrameworkThrowsResourceNotFoundException()
-        throws Exception {
+    public void downloadToCacheOnlyUsingGetWhenCatalogFrameworkThrowsResourceNotFoundException()
+            throws Exception {
         // Setup
         setupMockDownloadManager(true);
         setupMockCatalogFramework(mockResourceResponse, ResourceNotFoundException.class);
         ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
 
         // Perform Test
-        resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID, METACARD_ID);
+        resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID, METACARD_ID);
     }
 
     @Test
-    public void testStartDownloadToCacheOnly() throws Exception {
+    public void downloadToCacheOnlyUsingGet() throws Exception {
         // Setup
         setupMockDownloadManager(true);
         setupMockCatalogFramework(mockResourceResponse, null);
         ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
-                mockCatalogFramework, mockDownloadManager);
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
 
         // Perform Test
-        Response response = resourceDownloadEndpoint.startDownloadToCacheOnly(SOURCE_ID,
+        Response response = resourceDownloadEndpoint.getDownloadListOrDownloadToCache(SOURCE_ID,
                 METACARD_ID);
 
-        assertThat(response.getEntity(), is(
-                String.format(SUCCESSFUL_DOWNLOAD_TO_CACHE_MSG_TEMPLATE, METACARD_ID, SOURCE_ID)));
+        ResourceDownloadEndpoint.ResourceDownloadResponse resourceDownloadResponse =
+                objectMapper.fromJson((String) response.getEntity(),
+                        ResourceDownloadEndpoint.ResourceDownloadResponse.class);
+
+        assertThat(resourceDownloadResponse.getDownloadIdentifier(), is(DOWNLOAD_ID));
         assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
-        assertThat(response.getMediaType().toString(), is(MediaType.TEXT_PLAIN));
+    }
+
+    @Test
+    public void downloadToCacheUsingPost() throws Exception {
+        // Setup
+        setupMockDownloadManager(true);
+        setupMockCatalogFramework(mockResourceResponse, null);
+        ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
+
+        // Perform Test
+        Response response = resourceDownloadEndpoint.downloadToCache(SOURCE_ID, METACARD_ID);
+
+        ResourceDownloadEndpoint.ResourceDownloadResponse resourceDownloadResponse =
+                objectMapper.fromJson((String) response.getEntity(),
+                        ResourceDownloadEndpoint.ResourceDownloadResponse.class);
+
+        assertThat(resourceDownloadResponse.getDownloadIdentifier(), is(DOWNLOAD_ID));
+        assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
+    }
+
+    @Test(expected = DownloadToCacheOnlyException.class)
+    public void downloadToCacheUsingPostWithNullSourceId() throws Exception {
+        ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
+        resourceDownloadEndpoint.downloadToCache(null, METACARD_ID);
+    }
+
+    @Test(expected = DownloadToCacheOnlyException.class)
+    public void downloadToCacheUsingPostWithNullMetacardId() throws Exception {
+        ResourceDownloadEndpoint resourceDownloadEndpoint = new ResourceDownloadEndpoint(
+                mockCatalogFramework,
+                mockDownloadManager,
+                objectMapper);
+        resourceDownloadEndpoint.downloadToCache(SOURCE_ID, null);
     }
 
     private void setupMockDownloadManager(boolean isCacheEnabled) {
@@ -139,10 +201,9 @@ public class ResourceDownloadEndpointTest {
     }
 
     private void setupMockCatalogFramework(ResourceResponse mockResourceResponse,
-            Class<? extends Throwable> exceptionClass)
-        throws Exception {
-        when(mockCatalogFramework.getResource(any(ResourceRequest.class), eq(SOURCE_ID)))
-                .thenReturn(mockResourceResponse);
+            Class<? extends Throwable> exceptionClass) throws Exception {
+        when(mockCatalogFramework.getResource(any(ResourceRequest.class),
+                eq(SOURCE_ID))).thenReturn(mockResourceResponse);
 
         if (exceptionClass != null) {
             doThrow(exceptionClass).when(mockCatalogFramework)

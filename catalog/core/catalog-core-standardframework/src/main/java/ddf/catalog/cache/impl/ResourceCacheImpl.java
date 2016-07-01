@@ -1,4 +1,5 @@
 /**
+ /**
  * Copyright (c) Codice Foundation
  * <p>
  * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser
@@ -12,8 +13,6 @@
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
 package ddf.catalog.cache.impl;
-
-import static ddf.catalog.cache.impl.MetacardComparator.isSame;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,9 +39,9 @@ import com.hazelcast.core.IMap;
 
 import ddf.catalog.cache.ResourceCacheInterface;
 import ddf.catalog.data.Metacard;
+import ddf.catalog.data.impl.MetacardImpl;
 import ddf.catalog.resource.Resource;
 import ddf.catalog.resource.data.ReliableResource;
-
 
 public class ResourceCacheImpl implements ResourceCacheInterface {
 
@@ -366,23 +365,25 @@ public class ResourceCacheImpl implements ResourceCacheInterface {
                     "Neither the cachedResource nor the metacard retrieved from the catalog can be null.");
         }
 
-        Metacard cachedMetacard = cachedResource.getMetacard();
+        int cachedResourceHash = cachedResource.getMetacard()
+                .hashCode();
+        MetacardImpl latestMetacardImpl = new MetacardImpl(latestMetacard);
+        int latestMetacardHash = latestMetacardImpl.hashCode();
 
-        if (isSame(cachedMetacard, latestMetacard)) {
-
+        // compare hashes of cachedResource.getMetacard() and latestMetcard
+        if (cachedResourceHash == latestMetacardHash) {
             LOGGER.trace("EXITING: validateCacheEntry");
             return true;
-        }
-        File cachedFile = new File(cachedResource.getFilePath());
-        if (!FileUtils.deleteQuietly(cachedFile)) {
-            LOGGER.debug("File was not removed from cache directory.  File Path: {}",
-                    cachedResource.getFilePath());
-        }
+        } else {
+            File cachedFile = new File(cachedResource.getFilePath());
+            if (!FileUtils.deleteQuietly(cachedFile)) {
+                LOGGER.debug("File was not removed from cache directory.  File Path: {}",
+                        cachedResource.getFilePath());
+            }
 
-        cache.remove(cachedResource.getKey());
-        LOGGER.trace("EXITING: validateCacheEntry");
-        return false;
-
+            cache.remove(cachedResource.getKey());
+            LOGGER.trace("EXITING: validateCacheEntry");
+            return false;
+        }
     }
-
 }

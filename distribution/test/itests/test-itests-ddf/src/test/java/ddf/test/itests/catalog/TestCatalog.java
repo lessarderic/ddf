@@ -982,7 +982,7 @@ public class TestCatalog extends AbstractIntegrationTest {
     }
 
     // TODO will be fixed with ticket DDF-2207
-    @Ignore
+//    @Ignore
     @Test
     public void testGetMetacardResourceStatusCached()
             throws IOException, XPathExpressionException {

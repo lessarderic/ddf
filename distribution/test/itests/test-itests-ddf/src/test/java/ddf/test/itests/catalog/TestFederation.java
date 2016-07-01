@@ -1208,7 +1208,7 @@ public class TestFederation extends AbstractIntegrationTest {
      * @throws Exception
      */
     // TODO will be fixed with ticket DDF-2207
-    @Ignore
+//    @Ignore
     @Test
     public void testDownloadFromCacheIfAvailable() throws Exception {
         cometDClient = setupCometDClient(Arrays.asList(NOTIFICATIONS_CHANNEL, ACTIVITIES_CHANNEL));
@@ -1311,7 +1311,7 @@ public class TestFederation extends AbstractIntegrationTest {
                 .resolve(CSW_SOURCE_ID + "-" + metacardId + ".ser")), is(true));
     }
 
-    @Test
+    @Ignore
     public void testFederatedDownloadProductToCacheOnlyCacheDisabled() throws Exception {
         /**
          * Setup Add productDirectory to the URLResourceReader's set of valid root resource
