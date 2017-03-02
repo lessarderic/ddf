@@ -178,7 +178,7 @@
         <spark.version>2.5.5</spark.version>
 
         <!-- gitflow-incremental-builder -->
-        <gib.referenceBranch>refs/remotes/origin/master</gib.referenceBranch>
+        <gib.referenceBranch>refs/remotes/lessarderic/gitflow-incremental-builder</gib.referenceBranch>
         <gib.baseBranch>HEAD</gib.baseBranch>
         <gib.enabled>false</gib.enabled>
         <!--
