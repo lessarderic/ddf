@@ -183,6 +183,13 @@ public class QueryOperations extends DescribableImpl {
       }
 
       queryResponse = doQuery(queryRequest, fedStrategy);
+
+      queryResponse.getProperties().put("actualResultSize", queryResponse.getResults().size());
+
+      if (!queryResponse.hasMoreResults()) {
+        queryResponse.getProperties().put("queryCompleted", true);
+      }
+
       queryResponse = injectAttributes(queryResponse);
       queryResponse = validateFixQueryResponse(queryResponse, overrideFanoutRename, fanoutEnabled);
       queryResponse = postProcessPreAuthorizationPlugins(queryResponse);

@@ -213,9 +213,20 @@ public class ResultIterable implements Iterable<Result> {
         }
 
         results = response.getResults().iterator();
-        currentIndex += response.getResults().size();
 
-        if (response.getHits() >= 0 && currentIndex > response.getHits()) {
+        // FIXME - Because some of the results may be filtered out by the catalog framework's
+        // plugins, we need a way to know the actual page size and increment currentIndex based
+        // on that number instead if using the result list size.
+        // currentIndex += response.getResults().size();
+        currentIndex += (int) response.getProperties().get("actualResultSize");
+
+        // FIXME - Because some of the results may be filtered out by the catalog framework's
+        // plugins, we can't assume that an empty result list means we've reached the end and
+        // are done.
+        // if (response.getHits() >= 0 && currentIndex > response.getHits()) {
+        //   finished = true;
+        // }
+        if ((boolean) response.getProperties().get("queryCompleted")) {
           finished = true;
         }
       } catch (UnsupportedQueryException | SourceUnavailableException | FederationException e) {
